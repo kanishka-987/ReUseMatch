@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReUseMatch | Autonomous Circular Economy Platform</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <span class="logo-icon">🔄</span>
+                <h2>ReUseMatch</h2>
+            </div>
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active">
+                    <span class="nav-icon">📊</span> Dashboard
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">📦</span> My Submissions
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">🤝</span> Active Matches
+                </a>
+                <a href="#" class="nav-item">
+                    <span class="nav-icon">🏢</span> Recipients
+                </a>
+            </div>
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">U</div>
+                    <div class="user-info">
+                        <span class="user-name">User Account</span>
+                        <span class="user-role">Donor</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Dashboard Area -->
+        <main class="main-content">
+            <header class="top-header">
+                <div class="search-bar">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" placeholder="Search matches, items, organizations...">
+                </div>
+                <div class="header-actions">
+                    <span class="notification-bell">🔔<span class="badge"></span></span>
+                    <button class="btn btn-primary" id="openSubmitModal">Submit New Item</button>
+                </div>
+            </header>
+
+            <div class="dashboard-grid">
+                <!-- Submission / Simulator Column -->
+                <section class="card submission-card">
+                    <h3>Submit Item to Agent Pipeline</h3>
+                    <p class="card-subtitle">Provide details to trigger the multi-agent evaluation workflow.</p>
+                    <form id="submissionForm" class="submission-form">
+                        <div class="form-group">
+                            <label for="itemName">Item Name</label>
+                            <input type="text" id="itemName" required placeholder="e.g. Wooden Dining Table">
+                        </div>
+                        <div class="form-group">
+                            <label for="itemDescription">Description</label>
+                            <textarea id="itemDescription" rows="3" required placeholder="Describe condition, dimensions, and material..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="itemLocation">Pickup Location</label>
+                            <input type="text" id="itemLocation" required placeholder="e.g. 742 Evergreen Terrace, Springfield">
+                        </div>
+                        <button type="submit" class="btn btn-success btn-block">
+                            <span>🚀</span> Run Match Pipeline
+                        </button>
+                    </form>
+                </section>
+
+                <!-- Pipeline Monitor Column -->
+                <section class="card monitor-card">
+                    <h3>Agent Execution Monitor</h3>
+                    <p class="card-subtitle">Real-time status of autonomous agents routing the item.</p>
+                    <div class="pipeline-timeline" id="pipelineTimeline">
+                        <!-- Step 1 -->
+                        <div class="timeline-step pending" id="step-object">
+                            <div class="step-icon">🤖</div>
+                            <div class="step-details">
+                                <h4>Object Identification Agent</h4>
+                                <p class="step-desc">Classifies item type and extracts visual features.</p>
+                                <span class="status-pill">Idle</span>
+                            </div>
+                        </div>
+                        <!-- Step 2 -->
+                        <div class="timeline-step pending" id="step-condition">
+                            <div class="step-icon">📋</div>
+                            <div class="step-details">
+                                <h4>Condition Assessment Agent</h4>
+                                <p class="step-desc">Grading structural health and reuse score.</p>
+                                <span class="status-pill">Idle</span>
+                            </div>
+                        </div>
+                        <!-- Step 3 -->
+                        <div class="timeline-step pending" id="step-need">
+                            <div class="step-icon">❤️</div>
+                            <div class="step-details">
+                                <h4>Need Matcher Agent</h4>
+                                <p class="step-desc">Queries non-profit registries and recipient demands.</p>
+                                <span class="status-pill">Idle</span>
+                            </div>
+                        </div>
+                        <!-- Step 4 -->
+                        <div class="timeline-step pending" id="step-logistics">
+                            <div class="step-icon">🚚</div>
+                            <div class="step-details">
+                                <h4>Logistics & Routing Agent</h4>
+                                <p class="step-desc">Maps transit routes and calculates cost offsets.</p>
+                                <span class="status-pill">Idle</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Matching Results Summary -->
+                <section class="card results-card span-full">
+                    <div class="card-header-row">
+                        <div>
+                            <h3>Active Reuse Matches</h3>
+                            <p class="card-subtitle">Optimal matches computed by the Coordinator Orchestrator.</p>
+                        </div>
+                        <span class="refresh-indicator" id="syncStatus">Connected to Backend API</span>
+                    </div>
+
+                    <div class="matches-list" id="matchesList">
+                        <!-- Default Mock/Placeholder State -->
+                        <div class="empty-state">
+                            <div class="empty-icon">🌱</div>
+                            <p>No active pipeline run. Submit an item above to see matchmaking in action.</p>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>
