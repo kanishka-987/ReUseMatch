@@ -1,10 +1,12 @@
-class NeedAgent:
+from agents.common.base_agent import BaseAgent
+
+class NeedAgent(BaseAgent):
     """
     NeedAgent is responsible for matching the identified item and condition grade
     against database lists of organization/individual requests and needs.
     """
     def __init__(self):
-        pass
+        super().__init__(name="NeedAgent")
 
     def find_potential_matches(self, category: str, condition_grade: str) -> list:
         """
@@ -33,3 +35,9 @@ class NeedAgent:
                 })
                 
         return matches
+
+    def run(self, category: str, condition_grade: str) -> list:
+        """
+        Execute need agent matches.
+        """
+        return self.find_potential_matches(category, condition_grade)
