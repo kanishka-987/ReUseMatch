@@ -1,2 +1,5 @@
 # Models package initializer
-# In the future, import SQLAlchemy models here to make them discoverable.
+from backend.models.device import Device
+from backend.models.recipient import Recipient
+
+__all__ = ["Device", "Recipient"]

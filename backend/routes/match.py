@@ -1,6 +1,10 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
 from typing import List, Optional
+from sqlalchemy.orm import Session
+
+from database.connection import get_db
+from backend.services.matching_service import MatchingService
 from orchestration.orchestrator import CoordinatorOrchestrator
 
 router = APIRouter(prefix="/matches", tags=["matching"])
@@ -55,3 +59,22 @@ def trigger_matching(submission: ItemSubmission):
         "status": result["status"],
         "matches": result["matches"]
     }
+
+@router.get("/{device_id}")
+def get_device_matches(device_id: str, db: Session = Depends(get_db)):
+    """
+    Retrieves ranked recipient matches for a specific device by its UUID.
+    Returns transparent match score and detailed reasons.
+    """
+    try:
+        return MatchingService.match_device_to_recipients(device_id, db)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error matching device to recipients: {str(e)}"
+        )
