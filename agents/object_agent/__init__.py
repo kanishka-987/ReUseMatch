@@ -1,3 +1,3 @@
-from .agent import ObjectAgent
+from .agent import ObjectAgent, EvidenceAgent
 
-__all__ = ["ObjectAgent"]
+__all__ = ["ObjectAgent", "EvidenceAgent"]
