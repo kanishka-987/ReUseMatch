@@ -8,20 +8,22 @@ When an item is submitted, it flows through a sequential and coordinated pipelin
 
 ```mermaid
 graph TD
-    A[User Submits Unused Item] --> B[Object Agent]
-    B -->|Identifies Item & Category| C[Condition Agent]
-    C -->|Evaluates Usability & Grade| D[Need Agent]
-    D -->|Finds Potential Recipients/Orgs| E[Logistics Agent]
-    E -->|Determines Transfer Route & Costs| F[Coordinator / Orchestrator]
-    F -->|Produces Final Reuse Match| G[Match output to DB/Frontend]
+    A[User Submits Unused Item] --> B[Evidence Agent]
+    B -->|Extracts Evidence & Category| C[Diagnosis Agent]
+    C -->|Evaluates Quality & Usability| D[Decision Agent]
+    D -->|Selects Lifecycle Action| E[Need Agent]
+    E -->|Finds Recipients & Locations| F[Logistics Agent]
+    F -->|Estimates Routes & Transit Costs| G[Coordinator / Orchestrator]
+    G -->|Produces Final Reuse Match| H[Match output to DB/Frontend]
 ```
 
 1. **User Submission**: The entry point where an item (and optionally pictures or descriptions) is entered.
-2. **Object Agent**: Uses computer vision or text modeling to categorize and identify what the item is.
-3. **Condition Agent**: Evaluates the item's usability, determines a condition grade (e.g., New, Like New, Good, Fair), and notes any required repairs.
-4. **Need Agent**: Queries recipient databases or social needs lists to identify organizations, shelters, or individuals who can use this item.
-5. **Logistics Agent**: Calculates distance, optimal routing, transport methods (pickup, courier, delivery), and estimated costs.
-6. **Coordinator / Orchestrator**: Combines the analysis and outputs from all agents to rank and select the optimal reuse match.
+2. **Evidence Agent**: Uses text processing and LLM modeling to extract observed physical evidence and standardize category name.
+3. **Diagnosis Agent**: Evaluates the item's condition score, repairability status, and notes required repairs.
+4. **Decision Agent**: Selects the best circular action (REUSE, REPAIR, DONATE, RESELL, RECYCLE) based on condition metrics.
+5. **Need Agent**: Queries recipient databases or social needs lists to identify organizations, shelters, or individuals who can use this item.
+6. **Logistics Agent**: Calculates routing, distance, transport modes, and estimated delivery costs.
+7. **Coordinator / Orchestrator**: Coordinates sequential flow and compiles final recommendations.
 
 ---
 
@@ -34,9 +36,11 @@ ReUseMatch/
 │   ├── routes/           # API endpoints (items, matches)
 │   ├── models/           # SQLAlchemy DB schemas
 │   └── services/         # Business logic & services
-├── agents/               # Autonomous agent modules
-│   ├── object_agent/     # Item classification logic
-│   ├── condition_agent/  # Quality assessment logic
+├── agents/               # Restructured autonomous agent modules
+│   ├── common/           # Shared classes and LLM configuration
+│   ├── evidence_agent/   # Information parsing and evidence extraction
+│   ├── diagnosis_agent/  # Quality and condition evaluation
+│   ├── decision_agent/   # Best lifecycle action selection
 │   ├── need_agent/       # Need and recipient matching
 │   └── logistics_agent/  # Routing and transit calculation
 ├── orchestration/        # Coordination and pipeline manager
