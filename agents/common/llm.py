@@ -1,6 +1,16 @@
 import os
 import json
 import requests
+import sys
+from dotenv import load_dotenv
+
+# Load environment variables from ReUseMatch/.env unless running pytest
+if "pytest" not in sys.modules and "pytest" not in sys.argv[0]:
+    base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    dotenv_path = os.path.join(base_dir, ".env")
+    load_dotenv(dotenv_path=dotenv_path)
+
+
 
 class MissingAPIKeyError(Exception):
     """Exception raised when neither OpenAI nor Gemini API keys are available."""
