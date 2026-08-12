@@ -3,6 +3,7 @@ from .image_analyzer import ImageAnalysisResult
 from .condition_analyzer import ConditionAnalyzer
 from .component_analyzer import ComponentAnalyzer
 from .reuse_scorer import ReuseScorer
+from .component_recovery import ComponentRecoveryEstimator
 from typing import Optional, Dict, Any, List
 
 class DeviceAnalyzer:
@@ -15,6 +16,7 @@ class DeviceAnalyzer:
         self.condition_analyzer = ConditionAnalyzer()
         self.component_analyzer = ComponentAnalyzer()
         self.scorer = scorer or ReuseScorer()
+        self.recovery_estimator = ComponentRecoveryEstimator()
 
     def analyze_device(
         self, 
@@ -38,6 +40,9 @@ class DeviceAnalyzer:
         # 2. Component Analysis
         comp_res = self.component_analyzer.analyze(profile)
         
+        # 2b. Component Recovery Estimation
+        recovery_res = self.recovery_estimator.estimate_recovery(profile)
+        
         # 3. Reuse Potential Score
         score_res = self.scorer.evaluate(profile, comp_res)
 
@@ -56,6 +61,7 @@ class DeviceAnalyzer:
         # 5. Recommendation Generation
         overall_g = cond_res.overall_grade
         reusable_comps = [c for c in comp_res if c["reusable"]]
+        high_potential_comps = [c for c in recovery_res if c["potential_score"] >= 75]
         
         is_obsolete = profile.estimated_age > 6.0
         is_integrated_device = profile.category in ("Smartphone", "Tablet")
@@ -66,9 +72,9 @@ class DeviceAnalyzer:
 
         if not profile.power_status:
             # Completely dead - no power
-            if len(reusable_comps) >= 2 and not is_obsolete and not main_board_damaged:
+            if len(high_potential_comps) >= 2 and not is_obsolete and not main_board_damaged:
                 rec_action = "COMPONENT_REUSE"
-                rec_reason = "The main device is not viable for repair, but high-value parts (e.g., storage, memory) should be harvested."
+                rec_reason = "The complete device is not currently suitable for direct reuse because it does not power on. However, several components have high estimated recovery potential and may be suitable for component reuse."
             else:
                 rec_action = "RECYCLING"
                 rec_reason = "The device is entirely non-functional or obsolete with minimal salvageable value. Reclaimed materials should be recycled safely."
@@ -77,9 +83,9 @@ class DeviceAnalyzer:
             if repair_score >= 50:
                 rec_action = "REPAIR"
                 rec_reason = "The device powers on but fails key operational tests. Replacing the faulty components will restore full utility."
-            elif len(reusable_comps) >= 2 and not is_obsolete and not main_board_damaged:
+            elif len(high_potential_comps) >= 2 and not is_obsolete and not main_board_damaged:
                 rec_action = "COMPONENT_REUSE"
-                rec_reason = "The main device is not viable for repair, but high-value parts (e.g., storage, memory) should be harvested."
+                rec_reason = "The complete device is not currently suitable for direct reuse because key functional tests failed. However, several components have high estimated recovery potential and may be suitable for component reuse."
             else:
                 rec_action = "RECYCLING"
                 rec_reason = "The device is entirely non-functional or obsolete with minimal salvageable value. Reclaimed materials should be recycled safely."
@@ -139,7 +145,8 @@ class DeviceAnalyzer:
                 f"Repairability: {repair_level} - {repair_reason}",
                 f"Recommendation: {rec_action} - {rec_reason}",
                 f"Impact: {diversion} with {landfill_avoided_kg} kg diverted."
-            ]
+            ],
+            "component_recovery": recovery_res
         }
 
         return {
@@ -147,6 +154,7 @@ class DeviceAnalyzer:
             "device_profile": profile.model_dump(),
             "condition_analysis": cond_res.to_dict(),
             "component_analysis": comp_res,
+            "component_recovery": recovery_res,
             "repairability": {
                 "repairability_score": repair_score,
                 "repairability_level": repair_level,

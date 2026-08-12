@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 class DeviceProfile(BaseModel):
     """
@@ -30,3 +30,8 @@ class DeviceProfile(BaseModel):
     damaged_components: List[str] = Field(default_factory=list, description="Components that are broken or faulty")
     reusable_components: List[str] = Field(default_factory=list, description="Components identified as salvageable")
     missing_components: List[str] = Field(default_factory=list, description="Components that are absent")
+    
+    # Component recovery parameters
+    known_components: Dict[str, str] = Field(default_factory=dict, description="Detailed attributes of known components")
+    verified_components: List[str] = Field(default_factory=list, description="Components physically verified as working")
+

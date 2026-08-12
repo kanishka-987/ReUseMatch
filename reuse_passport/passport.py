@@ -38,6 +38,10 @@ class DigitalReusePassport(BaseModel):
         default_factory=list, 
         description="Catalog of components and salvage state"
     )
+    component_recovery: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="Estimated component recovery potential assessments"
+    )
     
     # Sustainability / Impact
     reuse_score: float = Field(..., ge=0.0, le=100.0, description="Reuse score")

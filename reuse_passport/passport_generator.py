@@ -73,6 +73,7 @@ class PassportGenerator:
             
             # Reusable components
             reusable_components=analysis_report["component_analysis"],
+            component_recovery=analysis_report.get("component_recovery", []),
             
             # Sustainability
             reuse_score=summary["reuse_score"],
