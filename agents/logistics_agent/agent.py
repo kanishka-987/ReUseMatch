@@ -14,7 +14,6 @@ class LogisticsAgent(BaseAgent):
         Estimates travel route, distance, mode of transport, and associated costs.
         Preserved fallback mock calculations.
         """
-        # Placeholder routing logic
         distance_km = 12.5  # mock value
         cost_est = round(distance_km * 1.5, 2)  # $1.50 per km
         

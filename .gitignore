@@ -41,3 +41,9 @@ Thumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Node & Build Outputs
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
