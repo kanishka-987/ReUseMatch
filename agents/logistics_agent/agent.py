@@ -1,4 +1,5 @@
 from agents.common.base_agent import BaseAgent
+from .schemas import LogisticsInput, LogisticsResult
 
 class LogisticsAgent(BaseAgent):
     """
@@ -11,6 +12,7 @@ class LogisticsAgent(BaseAgent):
     def evaluate_logistics(self, donor_location: str, recipient_location: str) -> dict:
         """
         Estimates travel route, distance, mode of transport, and associated costs.
+        Preserved fallback mock calculations.
         """
         # Placeholder routing logic
         distance_km = 12.5  # mock value
@@ -27,6 +29,14 @@ class LogisticsAgent(BaseAgent):
 
     def run(self, donor_location: str, recipient_location: str) -> dict:
         """
-        Execute logistics evaluation.
+        Execute logistics evaluation and validate inputs/outputs.
         """
-        return self.evaluate_logistics(donor_location, recipient_location)
+        # Validate inputs using Pydantic
+        inputs = LogisticsInput(donor_location=donor_location, recipient_location=recipient_location)
+
+        # Evaluate using mock logic
+        raw_result = self.evaluate_logistics(inputs.donor_location, inputs.recipient_location)
+
+        # Validate outputs using Pydantic
+        result_model = LogisticsResult(**raw_result)
+        return result_model.model_dump()

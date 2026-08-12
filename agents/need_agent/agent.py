@@ -1,4 +1,5 @@
 from agents.common.base_agent import BaseAgent
+from .schemas import NeedInput, NeedResult, NeedMatch
 
 class NeedAgent(BaseAgent):
     """
@@ -8,22 +9,55 @@ class NeedAgent(BaseAgent):
     def __init__(self):
         super().__init__(name="NeedAgent")
 
+    def _get_mock_organizations(self) -> list:
+        return [
+            {
+                "id": "org_001",
+                "name": "Community Housing Shelter",
+                "needs": ["furniture"],
+                "min_condition": "Good",
+                "location": "123 Hope Lane"
+            },
+            {
+                "id": "org_002",
+                "name": "Second Chance Goods",
+                "needs": ["furniture", "clothing"],
+                "min_condition": "Fair",
+                "location": "456 Charity Way"
+            },
+            {
+                "id": "org_003",
+                "name": "Kids Club Foundation",
+                "needs": ["toys", "furniture"],
+                "min_condition": "Good",
+                "location": "789 Youth Ave"
+            },
+            {
+                "id": "org_004",
+                "name": "Tech for All",
+                "needs": ["laptop", "monitor", "electronics"],
+                "min_condition": "Fair",
+                "location": "100 Tech Way"
+            },
+            {
+                "id": "org_005",
+                "name": "Digital Divide Aid",
+                "needs": ["laptop"],
+                "min_condition": "Good",
+                "location": "456 Gateway Road"
+            }
+        ]
+
     def find_potential_matches(self, category: str, condition_grade: str) -> list:
         """
         Queries target lists of needs to find compatible organizations.
+        Keeps legacy behavior intact but returns a list.
         """
-        # Placeholder recipient list
-        mock_organizations = [
-            {"id": "org_001", "name": "Community Housing Shelter", "needs": ["furniture"], "min_condition": "Good"},
-            {"id": "org_002", "name": "Second Chance Goods", "needs": ["furniture", "clothing"], "min_condition": "Fair"},
-            {"id": "org_003", "name": "Kids Club Foundation", "needs": ["toys", "furniture"], "min_condition": "Good"}
-        ]
-        
+        mock_organizations = self._get_mock_organizations()
         matches = []
         for org in mock_organizations:
             category_match = category.lower() in [n.lower() for n in org["needs"]]
-            # Simple condition matching hierarchy: Like New > Good > Fair
-            condition_rank = {"Like New": 3, "Good": 2, "Fair": 1}
+            condition_rank = {"Like New": 3, "Good": 2, "Fair": 1, "Poor": 0}
             item_rank = condition_rank.get(condition_grade, 0)
             min_rank = condition_rank.get(org["min_condition"], 0)
             
@@ -36,8 +70,47 @@ class NeedAgent(BaseAgent):
                 
         return matches
 
-    def run(self, category: str, condition_grade: str) -> list:
+    def run(self, category: str, condition_grade: str) -> dict:
         """
-        Execute need agent matches.
+        Execute need agent matches, validate inputs/outputs using Pydantic,
+        and rank results by a transparent match score.
         """
-        return self.find_potential_matches(category, condition_grade)
+        # Validate inputs
+        inputs = NeedInput(category=category, condition_grade=condition_grade)
+        cat = inputs.category
+        grade = inputs.condition_grade
+
+        mock_organizations = self._get_mock_organizations()
+        condition_rank = {"Like New": 3, "Good": 2, "Fair": 1, "Poor": 0}
+        item_rank = condition_rank.get(grade, 0)
+
+        matches = []
+        for org in mock_organizations:
+            category_match = cat.lower() in [n.lower() for n in org["needs"]]
+            min_cond = org["min_condition"]
+            min_rank = condition_rank.get(min_cond, 0)
+
+            if category_match and item_rank >= min_rank:
+                # Calculate transparent score: base rank percentage plus a bonus for exceeding min requirement
+                # Max score is 100.0
+                raw_score = (item_rank / 3.0) * 100.0
+                score = round(min(100.0, max(0.0, raw_score)), 2)
+
+                priority = "High" if item_rank > min_rank else "Medium"
+                reason = f"Category '{cat}' matches organization needs. Item condition '{grade}' meets or exceeds the minimum required condition '{min_cond}'."
+
+                matches.append(NeedMatch(
+                    organization_id=org["id"],
+                    organization_name=org["name"],
+                    priority=priority,
+                    match_score=score,
+                    reason=reason,
+                    location=org.get("location"),
+                    missing_information=["specific_quantity_required", "preferred_pickup_time"]
+                ))
+
+        # Rank matches by score descending
+        matches.sort(key=lambda x: x.match_score, reverse=True)
+
+        result_model = NeedResult(matches=matches)
+        return result_model.model_dump()
