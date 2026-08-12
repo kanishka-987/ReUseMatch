@@ -42,6 +42,18 @@ class PassportValidator:
                     f"Component entry for '{comp.get('component_name', 'Unknown')}' is missing keys: {missing_keys}"
                 )
 
+        # Validate component recovery structure
+        for rec in passport.component_recovery:
+            required_keys = {
+                "component", "potential_score", "potential_level", 
+                "confidence_score", "confidence_level", "assessment_status"
+            }
+            missing_keys = required_keys - set(rec.keys())
+            if missing_keys:
+                raise ValueError(
+                    f"Component recovery entry for '{rec.get('component', 'Unknown')}' is missing keys: {missing_keys}"
+                )
+
         return True
 
     def is_transition_allowed(self, from_status: PassportStatus, to_status: PassportStatus) -> bool:

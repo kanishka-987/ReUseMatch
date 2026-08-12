@@ -158,10 +158,88 @@ Calling `DeviceAnalyzer.analyze_device(...)` returns a comprehensive dictionary 
 
 ---
 
-## 3. UI and Fronted Integration (analysis_summary)
+## 3. Component Recovery Estimation Schema (For non-functional/dead devices)
+
+When a device is marked `power_status: false` or `working_status: false`, it cannot be confirmed as fully functional. Sub-components are assessed under the `component_recovery` list.
+
+### Component Recovery Payload Structure
+
+Each entry in `component_recovery` contains:
+* `component` (str): Name of the hardware component (e.g. `RAM`, `SSD`).
+* `potential_score` (float): Recovery potential grade from `0` to `100`.
+* `potential_level` (str): Rating label (`HIGH`, `MEDIUM`, `LOW`, `VERY LOW / UNKNOWN`).
+* `confidence_score` (float): Calculation confidence grade from `0` to `100` (reduced by `20` points if the device does not boot).
+* `confidence_level` (str): Confidence rating label (`HIGH`, `MEDIUM`, `LOW`).
+* `assessment_status` (str): Grading status (`VERIFIED` if physically tested, `ESTIMATED` if calculated, `UNKNOWN` if missing).
+* `reason` (str): Human-readable explainability string for UI rendering.
+
+### Example Non-Functional Device Response
+
+```json
+{
+  "item_id": "RM-002",
+  "device_profile": {
+    "item_id": "RM-002",
+    "item_name": "Non-Functional Laptop",
+    "category": "Laptop",
+    "brand": "Dell",
+    "model": "Precision 5550",
+    "estimated_age": 4.0,
+    "working_status": false,
+    "power_status": false,
+    "physical_condition": "FAIR",
+    "functional_condition": "NON_FUNCTIONAL",
+    "visible_damage": ["minor_scratches"],
+    "damaged_components": [],
+    "reusable_components": [],
+    "missing_components": [],
+    "known_components": {
+      "RAM": "8GB",
+      "SSD": "512GB"
+    },
+    "verified_components": []
+  },
+  "condition_analysis": {
+    "physical_grade": "FAIR",
+    "physical_explanation": "The device displays noticeable cosmetic wear or moderate damage: minor_scratches.",
+    "functional_grade": "NON_FUNCTIONAL",
+    "functional_explanation": "The device does not boot or draw power.",
+    "overall_grade": "NON_FUNCTIONAL",
+    "overall_explanation": "Device is non-functional due to power/operational test failures."
+  },
+  "component_recovery": [
+    {
+      "component": "RAM",
+      "potential_score": 75.0,
+      "potential_level": "HIGH",
+      "confidence_score": 75.0,
+      "confidence_level": "HIGH",
+      "assessment_status": "ESTIMATED",
+      "reason": "RAM (8GB) has high recovery potential based on device category and specs, but functionality cannot be confirmed because the device does not power on."
+    },
+    {
+      "component": "SSD",
+      "potential_score": 75.0,
+      "potential_level": "HIGH",
+      "confidence_score": 75.0,
+      "confidence_level": "HIGH",
+      "assessment_status": "ESTIMATED",
+      "reason": "SSD (512GB) has high recovery potential based on device category and specs, but functionality cannot be confirmed because the device does not power on."
+    }
+  ],
+  "recommendation": {
+    "recommended_action": "COMPONENT_REUSE",
+    "explanation": "The complete device is not currently suitable for direct reuse because it does not power on. However, several components have high estimated recovery potential and may be suitable for component reuse."
+  }
+}
+```
+
+---
+
+## 4. UI and Frontend Integration (analysis_summary)
 
 The `analysis_summary` object inside the output payload is designed for fast rendering of frontend cards:
 1. **Reuse Score Meter**: Bind `reuse_score` (e.g. `87.0`) and `reuse_level` (e.g. `HIGH REUSE POTENTIAL`) to a circular gauge.
 2. **Condition Badge**: Draw a badge using `condition` (e.g., `GOOD` or `POOR`) with context-aware CSS colors.
-3. **Component Reuse Cards**: Iterate over `component_analysis` where `reusable` is true.
+3. **Component Recovery list**: For non-functional devices, iterate over `component_recovery` to display component cards containing estimated potential levels, confidence scores, and description tooltips.
 4. **Lifecycle Timeline**: Render `status_history` in sequence to display the device custody tracking trail.

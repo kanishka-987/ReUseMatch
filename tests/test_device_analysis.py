@@ -379,3 +379,65 @@ def test_passport_alternative_lifecycle_paths():
     passport_2 = generator.generate_passport(report)
     validator.update_status(passport_2, PassportStatus.RECYCLING, "Sent directly to recycling center")
     assert passport_2.current_status == PassportStatus.RECYCLING
+
+
+def test_scenario_6_non_functional_component_recovery():
+    """
+    Scenario 6: Non-functional laptop where components are estimated or unknown,
+    but not verified working unless explicitly passed.
+    """
+    profile = DeviceProfile(
+        item_id="RM-LAPTOP-06",
+        item_name="Non-Functional Dell Laptop",
+        category="Laptop",
+        brand="Dell",
+        model="Latitude 5420",
+        estimated_age=4.0,
+        working_status=False,
+        power_status=False,
+        physical_condition="FAIR",
+        functional_condition="NON_FUNCTIONAL",
+        visible_damage=["Minor scratches"],
+        missing_components=["Charger/adapter"],
+        known_components={
+            "RAM": "8GB RAM",
+            "SSD": "512GB SSD"
+        }
+    )
+    
+    analyzer = DeviceAnalyzer()
+    report = analyzer.analyze_device(profile)
+    summary = report["analysis_summary"]
+    
+    # 1. Recommended action must be COMPONENT_REUSE
+    assert summary["recommended_action"] == "COMPONENT_REUSE"
+    assert "component reuse" in report["recommendation"]["explanation"].lower()
+    
+    # 2. Check component recovery details list exists
+    recovery = report["component_recovery"]
+    assert len(recovery) > 0
+    
+    # 3. Charger/adapter must be UNKNOWN status
+    charger_entry = next(c for c in recovery if c["component"] == "Charger/adapter")
+    assert charger_entry["assessment_status"] == "UNKNOWN"
+    assert charger_entry["potential_score"] == 0.0
+    assert "missing" in charger_entry["reason"].lower()
+
+    # 4. RAM must be ESTIMATED (not verified!) and have HIGH potential
+    ram_entry = next(c for c in recovery if c["component"] == "RAM")
+    assert ram_entry["assessment_status"] == "ESTIMATED"
+    assert ram_entry["potential_level"] == "HIGH"
+    assert "8gb ram" in ram_entry["reason"].lower()
+    # Confidence score: 85 - 20 (power issue) + 10 (known specs) = 75
+    assert ram_entry["confidence_score"] == 75.0
+    assert "does not power on" in ram_entry["reason"].lower()
+    assert "verified" not in ram_entry["reason"].lower()
+
+    # 5. Check passport mapping
+    generator = PassportGenerator()
+    passport = generator.generate_passport(report)
+    assert len(passport.component_recovery) > 0
+    
+    validator = PassportValidator()
+    assert validator.validate_structure(passport) is True
+
