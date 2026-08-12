@@ -1,14 +1,11 @@
 from fastapi import APIRouter, HTTPException, Depends, status
 from pydantic import BaseModel
-<<<<<<< HEAD
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+
 from sqlalchemy.orm import Session
 
 from database.connection import get_db
 from backend.services.matching_service import MatchingService
-=======
-from typing import List, Optional, Dict, Any
->>>>>>> origin/member1-frontend-ui
 from orchestration.orchestrator import CoordinatorOrchestrator
 
 router = APIRouter(prefix="/matches", tags=["matching"])

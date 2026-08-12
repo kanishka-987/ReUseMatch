@@ -50,45 +50,10 @@ class NeedAgent(BaseAgent):
 
     def find_potential_matches(self, category: str, condition_grade: str) -> list:
         """
-<<<<<<< HEAD
         Queries target lists of needs to find compatible organizations.
         Keeps legacy behavior intact but returns a list.
         """
         mock_organizations = self._get_mock_organizations()
-=======
-        Legacy match finding logic.
-        """
-        mock_organizations = [
-            {
-                "id": "org_001",
-                "name": "Community Housing Shelter",
-                "needs": ["furniture", "electronics"],
-                "min_condition": "Good",
-                "location": "Community Housing Shelter Center, Downtown",
-                "reason": "High demand for community room furniture & tech",
-                "match_score": 88
-            },
-            {
-                "id": "org_002",
-                "name": "Second Chance Goods",
-                "needs": ["furniture", "clothing", "electronics"],
-                "min_condition": "Fair",
-                "location": "Second Chance Hub, Westside",
-                "reason": "Refurbishment & job training program",
-                "match_score": 80
-            },
-            {
-                "id": "org_003",
-                "name": "Kids Club Foundation",
-                "needs": ["toys", "furniture", "electronics"],
-                "min_condition": "Good",
-                "location": "Kids Club Learning Center, Northside",
-                "reason": "Youth educational computer lab expansion",
-                "match_score": 92
-            }
-        ]
-
->>>>>>> origin/member1-frontend-ui
         matches = []
         for org in mock_organizations:
             category_match = category.lower() in [n.lower() for n in org["needs"]]
@@ -109,12 +74,23 @@ class NeedAgent(BaseAgent):
 
         return matches
 
-<<<<<<< HEAD
-    def run(self, category: str, condition_grade: str) -> dict:
+def run(self, category: str, condition_grade: str, lifecycle_action: str = "REUSE") -> dict:
         """
         Execute need agent matches, validate inputs/outputs using Pydantic,
-        and rank results by a transparent match score.
+        and skip recipient matching when lifecycle decision is RECYCLE.
         """
+        # Skip matching when the lifecycle decision is RECYCLE
+        if lifecycle_action == "RECYCLE":
+            return {
+                "status": "Skipped",
+                "matching_organizations_count": 0,
+                "matches": [],
+                "skip_reason": (
+                    "Recipient matching was bypassed because the "
+                    "lifecycle decision is RECYCLE."
+                )
+            }
+
         # Validate inputs
         inputs = NeedInput(category=category, condition_grade=condition_grade)
         cat = inputs.category
@@ -125,54 +101,46 @@ class NeedAgent(BaseAgent):
         item_rank = condition_rank.get(grade, 0)
 
         matches = []
+
         for org in mock_organizations:
             category_match = cat.lower() in [n.lower() for n in org["needs"]]
             min_cond = org["min_condition"]
             min_rank = condition_rank.get(min_cond, 0)
 
             if category_match and item_rank >= min_rank:
-                # Calculate transparent score: base rank percentage plus a bonus for exceeding min requirement
-                # Max score is 100.0
                 raw_score = (item_rank / 3.0) * 100.0
                 score = round(min(100.0, max(0.0, raw_score)), 2)
 
                 priority = "High" if item_rank > min_rank else "Medium"
-                reason = f"Category '{cat}' matches organization needs. Item condition '{grade}' meets or exceeds the minimum required condition '{min_cond}'."
+                reason = (
+                    f"Category '{cat}' matches organization needs. "
+                    f"Item condition '{grade}' meets or exceeds the "
+                    f"minimum required condition '{min_cond}'."
+                )
 
-                matches.append(NeedMatch(
-                    organization_id=org["id"],
-                    organization_name=org["name"],
-                    priority=priority,
-                    match_score=score,
-                    reason=reason,
-                    location=org.get("location"),
-                    missing_information=["specific_quantity_required", "preferred_pickup_time"]
-                ))
+                matches.append(
+                    NeedMatch(
+                        organization_id=org["id"],
+                        organization_name=org["name"],
+                        priority=priority,
+                        match_score=score,
+                        reason=reason,
+                        location=org.get("location"),
+                        missing_information=[
+                            "specific_quantity_required",
+                            "preferred_pickup_time"
+                        ]
+                    )
+                )
 
         # Rank matches by score descending
         matches.sort(key=lambda x: x.match_score, reverse=True)
 
         result_model = NeedResult(matches=matches)
-        return result_model.model_dump()
-=======
-    def run(self, category: str, condition_grade: str, lifecycle_action: str = "REUSE") -> dict:
-        """
-        Runs NeedAgent pipeline stage. If lifecycle_action is RECYCLE, matching is skipped.
-        """
-        if lifecycle_action == "RECYCLE":
-            return {
-                "status": "Skipped",
-                "matching_organizations_count": 0,
-                "matches": [],
-                "skip_reason": "Recipient matching was bypassed because the lifecycle decision is RECYCLE."
-            }
-
-        matches = self.find_potential_matches(category, condition_grade)
 
         return {
             "status": "Success",
             "matching_organizations_count": len(matches),
-            "matches": matches,
+            "matches": result_model.model_dump()["matches"],
             "skip_reason": None
         }
->>>>>>> origin/member1-frontend-ui
